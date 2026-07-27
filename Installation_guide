@@ -1,0 +1,292 @@
+# Colocalisation_microscopy_analysis installation guide for new users
+
+  For biologists: installation, data formatting, and how to use the tool
+TABLE OF CONTENTS
+─────────────────
+  1. What This Tool Does
+  2. Installation Requirements
+  3. Step-by-Step Installation
+  4. Preparing Your Data (CSV Format)
+  5. Using the GUI (Graphical Interface)
+  6. Using the Command Line (Optional)
+  7. Understanding the Output Files
+  8. Troubleshooting / FAQ
+
+1.  WHAT THIS TOOL DOES
+
+This tool takes TWO CSV files — each representing a different population of
+objects (e.g. cells, puncta, organelles, or molecular markers from two
+fluorescent channels) — and performs a comprehensive colocalization analysis.
+
+It answers questions like:
+  • Are these two populations spatially associated (clustered together)?
+  • Are they randomly distributed relative to each other?
+  • Are they actively avoiding each other (segregated)?
+  • How much do their spatial distributions overlap?
+  • Which objects from population A are near objects from population B?
+
+The tool produces 9 publication-quality figures and a summary CSV of all
+computed metrics. Every run is timestamped so you never lose previous results.
+2.  INSTALLATION REQUIREMENTS
+You need the following installed on your computer:
+  A) Python (version 3.8 or newer)
+     Download from: https://www.python.org/downloads/
+          IMPORTANT for Windows users:
+       During installation, CHECK the box that says:
+       ☑ "Add Python to PATH"
+  B) Required Python packages
+     The tool uses these libraries (all free and open-source):
+     Package           What it does                    
+     numpy             Numerical computations           
+     pandas            Reading CSV files                 
+     matplotlib        Creating figures                  
+     scipy             Spatial statistics, KDE, Voronoi  
+     scikit-learn      K-means, DBSCAN clustering        
+     networkx          Network/graph analysis            
+     tkinter           GUI (usually included with Python) 
+  C) Operating System
+     Works on Windows, macOS, and Linux.
+     The GUI uses tkinter, which comes pre-installed with Python on Windows
+     and macOS. On Linux you may need to install it separately (see below).
+
+3.  STEP-BY-STEP INSTALLATION
+  STEP 1:  Install Python
+    • Go to https://www.python.org/downloads/
+    • Download the latest Python 3.x release
+    • Run the installer
+    • Windows: CHECK "Add Python to PATH" at the bottom of the installer
+    • macOS: Just follow the prompts
+    • Click "Install Now"
+  STEP 2:  Open a terminal / command prompt
+      • Windows: Press Win+R, type "cmd", press Enter
+               OR search for "Command Prompt" in the Start menu
+               OR search for "PowerShell"
+    • macOS:   Open Applications → Utilities → Terminal
+    • Linux:   Open your terminal application
+  STEP 3:  Install required packages
+    Copy and paste this single command into your terminal and press Enter:
+    pip install numpy pandas matplotlib scipy scikit-learn networkx
+    Wait for it to finish. You should see "Successfully installed ..."
+    If "pip" is not found, try:
+        python -m pip install numpy pandas matplotlib scipy scikit-learn networkx
+    On macOS/Linux, you might need:
+        pip3 install numpy pandas matplotlib scipy scikit-learn networkx
+  STEP 4 (Linux only):  Install tkinter
+      On Ubuntu/Debian:
+      sudo apt-get install python3-tk
+    On Fedora:
+      sudo dnf install python3-tkinter
+    On macOS and Windows, tkinter is included with Python automatically.
+  STEP 5:  Save the script
+    Save the Python script as "colocalisation.py" in a folder you can
+    easily find (e.g. your Desktop or a project folder).
+  STEP 6:  Test the installation
+    In your terminal, navigate to the folder where you saved the script:
+    
+     cd path/to/your/folder
+    Then run:
+          python colocalisation.py
+    The GUI window should appear. If it does, everything is installed
+    correctly!
+4.  PREPARING YOUR DATA (CSV Format)
+  WHAT YOU NEED
+  Two CSV files, one for each population/channel you want to compare.
+  For example:
+    • "GFP_puncta.csv"    — objects detected in the green channel
+    • "mCherry_puncta.csv" — objects detected in the red channel
+  REQUIRED COLUMNS
+  Each CSV file MUST contain at least these columns (header names must
+  match exactly, including underscores and lowercase):
+    Column Name      What It Represents                   Units
+    centroid_x       X-coordinate of the object centre    pixels or µm
+    centroid_y       Y-coordinate of the object centre    pixels or µm
+    area             Size/area of the object              pixels² or µm²
+  OPTIONAL COLUMNS (ignored but allowed)
+  The tool will silently ignore any extra columns. So if your CSV also has
+  columns like "label", "solidity", "n_cells_estimate", etc., that is fine.
+  EXAMPLE CSV FILE
+  Your file might look like this when opened in a text editor:
+    label,area,centroid_y,centroid_x,solidity,n_cells_estimate
+    1,245.5,100.2,200.3,0.95,1
+    2,189.3,150.7,180.4,0.88,1
+    3,312.1,220.1,340.2,0.92,2
+    4,156.8,310.5,120.9,0.91,1
+
+  Or with tab separation:
+
+    label	area	centroid_y	centroid_x	solidity	n_cells_estimate
+    1	245.5	100.2	200.3	0.95	1
+    2	189.3	150.7	180.4	0.88	1
+
+  Both comma-separated and tab-separated files are supported. The tool
+  auto-detects the delimiter.
+  IMPORTANT NOTES
+    • Both CSV files should use the SAME coordinate system and units.
+    If one is in pixels and the other in micrometres, the results will
+    be meaningless.
+  • If your data comes from different images, make sure the coordinates
+    are registered (aligned) to the same reference frame.
+  • Common sources that produce compatible CSVs:
+      - StarDist / Cellpose (cell segmentation)
+      - ImageJ/FIJI (Analyze Particles)
+      - QuPath
+      - CellProfiler
+      - Custom Python scripts using scikit-image regionprops
+  • The more objects you have, the more statistically robust the analysis
+    will be. The tool works with as few as ~10 objects per file, but
+    ideally you want 50+ in each.
+5.  USING THE GUI (Graphical Interface)
+  LAUNCHING THE GUI
+    Double-click the script file, or open a terminal and run:
+
+    python colocalisation.py
+  STEP-BY-STEP
+  ────────────
+  1. Click "Browse…" next to CSV File A → select your first CSV file
+     (e.g. GFP channel detections)
+
+  2. Click "Browse…" next to CSV File B → select your second CSV file
+     (e.g. mCherry channel detections)
+
+  3. (Optional) Change the population labels.
+     These names appear on all the figures and in the summary.
+     Examples: "GFP", "mCherry", "Marker X", "CD4+ T cells", etc.
+
+  4. The output directory defaults to the same folder as CSV File A.
+     If you want results saved elsewhere:
+       - Uncheck "Same directory as CSV A"
+       - Click "Browse…" to pick a different folder
+
+  5. Click "▶ Run Analysis"
+
+  6. Wait for the progress bar and status message.
+     The analysis typically takes 10 seconds to a few minutes depending
+     on how many objects you have.
+
+  7. When finished, a popup will confirm success and show you where
+     the results were saved.
+
+  8. Navigate to the output folder to find your figures and summary CSV.
+
+  NOTES
+  ─────
+  • You can run the analysis multiple times with different files or
+    parameters — each run gets a unique timestamp (e.g. 20250125_143052)
+    so nothing is overwritten.
+
+  • The GUI stays responsive during analysis (it runs in the background).
+    Do not close the window while it is running.
+
+  • If something goes wrong, an error dialog will appear with details
+    about what went wrong.
+
+7.  UNDERSTANDING THE OUTPUT FILES
+  After a successful run, you will find these files in your output folder
+  (all with a timestamp suffix like _20250125_143052):
+
+  File                           			    What It Shows
+  01_spatial_overlay_*.png           Side-by-side and merged scatter plots
+                                     of both populations. Marker size
+                                     reflects object area.
+
+  02_nearest_neighbour_*.png         How far each object in A is from its
+                                     closest neighbour in B (and vice
+                                     versa). Includes histograms, CDFs,
+                                     and a spatial map with connecting
+                                     lines.
+
+  03_grid_correlation_*.png          The image is divided into a grid;
+                                     counts of A and B per grid square
+                                     are compared. Shows density maps,
+                                     merged image, and correlation plot
+                                     with Pearson/Spearman/Manders.
+
+  04_proximity_network_*.png         Network where A and B objects are
+                                     connected if within a threshold
+                                     distance. Shown at multiple
+                                     thresholds. Nodes coloured by degree
+                                     (number of cross-type connections).
+
+  04b_degree_distribution_*.png      Histograms of how many cross-type
+                                     neighbours each object has, and
+                                     whether larger objects have more.
+
+  05_kmeans_*.png                    K-means clustering of all objects
+                                     together. Shows elbow plot,
+                                     silhouette, mixing entropy, and
+                                     spatial cluster map.
+
+  05b_kmeans_composition_*.png       Stacked bar chart: what fraction of
+                                     each cluster is A vs B.
+
+  06_dbscan_*.png                    Density-based clustering (DBSCAN).
+                                     Highlights "mixed" clusters that
+                                     contain both A and B objects, with
+                                     convex hull outlines.
+
+  07_ripleys_cross_K_*.png           Ripley's cross-K and cross-L spatial
+                                     statistics with simulation envelope.
+                                     Tests whether colocalization is
+                                     statistically significant.
+
+  08_kde_overlap_*.png               Smooth density surfaces (KDE) for
+                                     each population and their overlap
+                                     visualized as an RGB merge.
+
+  09_voronoi_*.png                   Voronoi tessellation showing which
+                                     objects neighbour objects of the
+                                     other type. Measures spatial mixing
+                                     vs segregation.
+
+  summary_metrics_*.csv              All numerical metrics from every
+                                     analysis in one spreadsheet. Open
+                                     in Excel, Google Sheets, etc.
+8.  TROUBLESHOOTING / FAQ
+  Q: "python" is not recognised as a command.
+  A: Python is not in your PATH. On Windows, reinstall Python and check
+     "Add Python to PATH". Or try "python3" instead of "python".
+
+  Q: "pip" is not recognised.
+  A: Try: python -m pip install ...
+     Or:  python3 -m pip install ...
+
+  Q: I get "ModuleNotFoundError: No module named 'tkinter'"
+  A: On Linux: sudo apt-get install python3-tk
+     On macOS/Windows this should not happen — reinstall Python.
+
+  Q: I get "Missing columns in file: {'centroid_x'}"
+  A: Your CSV does not have the required column names. Check that the
+     header row contains exactly: centroid_x, centroid_y, area
+     (case-sensitive, with underscores).
+
+  Q: The analysis is very slow.
+  A: With very large datasets (>10,000 objects), some analyses (especially
+     Ripley's K and proximity networks) can take several minutes. This is
+     normal. The progress bar will keep spinning.
+
+  Q: Can I compare more than two populations?
+  A: Run the tool multiple times with different pairs. For example:
+     Run 1: Channel A vs Channel B
+     Run 2: Channel A vs Channel C
+     Run 3: Channel B vs Channel C
+     Each run is timestamped separately.
+
+  Q: What coordinate units should I use?
+  A: Any consistent units work (pixels, micrometres, etc.). Just make
+     sure BOTH files use the same units. The scale bar on plots will
+     show "units" — you can mentally substitute your actual unit.
+
+  Q: My CSVs use different delimiters (comma vs tab).
+  A: The tool auto-detects the delimiter. Both comma and tab separation
+     work fine.
+
+  Q: Can I use this with 3D data (X, Y, Z)?
+  A: Currently the tool analyses 2D colocalization only (X, Y). If you
+     have 3D data, you could run it on 2D projections, or modify the
+     script to include a Z coordinate.
+
+  Q: I ran the analysis twice and got different files — is that right?
+  A: Yes! Each run is timestamped (e.g. _20250125_143052 vs
+     _20250125_143510). Nothing is ever overwritten. You can safely
+     run the tool as many times as you like.
+
